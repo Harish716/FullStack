@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>User Info Form</title>
+</head>
+<body style="font-family:Arial,sans-serif;background:linear-gradient(135deg,#6a11cb,#2575fc);display:flex;justify-content:center;align-items:center;height:100vh;margin:0;position:relative;">
+<div style="background:white;padding:20px;border-radius:10px;box-shadow:0px 8px 20px rgba(0,0,0,0.2);width:350px;">
+<h2 style="text-align:center;color:#333;">Enter Your Details</h2>
+
+<form id="userForm">
+  <label>Full Name:</label>
+  <input type="text" name="name" required style="width:100%;padding:8px;margin-bottom:10px;border:1px solid #ccc;border-radius:6px;">
+
+  <label>Gmail:</label>
+  <input type="email" name="gmail" required style="width:100%;padding:8px;margin-bottom:10px;border:1px solid #ccc;border-radius:6px;">
+
+  <label>Age:</label>
+  <input type="number" name="age" required style="width:100%;padding:8px;margin-bottom:10px;border:1px solid #ccc;border-radius:6px;">
+
+  <label>Date of Birth:</label>
+  <input type="date" name="dob" required style="width:100%;padding:8px;margin-bottom:10px;border:1px solid #ccc;border-radius:6px;">
+
+  <label>Mobile Number:</label>
+  <input type="tel" name="mobile" pattern="[0-9]{10}" required style="width:100%;padding:8px;margin-bottom:10px;border:1px solid #ccc;border-radius:6px;">
+
+  <label>Upload Photo:</label>
+  <input type="file" name="photo" accept="image/*" required style="width:100%;padding:8px;margin-bottom:10px;">
+
+  <label>Domain Known:</label>
+  <select name="domain" required style="width:100%;padding:8px;margin-bottom:10px;border:1px solid #ccc;border-radius:6px;">
+    <option value="">--Select--</option>
+    <option value="Web Development">Web Development</option>
+    <option value="Data Science">Data Science</option>
+    <option value="Cyber Security">Cyber Security</option>
+    <option value="AI/ML">AI/ML</option>
+    <option value="IoT">IoT</option>
+  </select>
+
+  <input type="submit" value="Submit" style="width:100%;padding:10px;background:#2575fc;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">
+</form>
+<p id="status" style="text-align:center;margin-top:10px;color:green;"></p>
+</div>
+
+<!-- Past submissions display -->
+<div id="pastSubmissions" style="position:absolute;top:20px;right:20px;background:white;padding:10px;border-radius:8px;box-shadow:0px 4px 10px rgba(0,0,0,0.15);max-width:200px;">
+  <h4 style="margin:0 0 5px 0;font-size:14px;">Past Submissions</h4>
+  <div id="submissionsList" style="display:flex;flex-direction:column;gap:5px;overflow-y:auto;max-height:300px;"></div>
+</div>
+
+<script>
+const scriptURL = "https://script.google.com/macros/s/AKfycbzVUhI7E46ZWrmf1m26xurXVYGfsPvvVZE_vSPhg9DnxvvLWLWo9yALzXaJpR_elnbJtw/exec"; // Replace with your Apps Script web app URL
+
+// Save new data
+document.getElementById("userForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const userData = {};
+
+    formData.forEach((value, key) => {
+        userData[key] = value;
+    });
+
+    const file = formData.get("photo");
+    const reader = new FileReader();
+    reader.onload = function() {
+        userData.photo = reader.result;
+
+        fetch(scriptURL, {
+            method: "POST",
+            body: JSON.stringify(userData)
+        })
+        .then(res => res.text())
+        .then(() => {
+            document.getElementById("status").textContent = "✅ Data Saved Successfully!";
+            document.getElementById("userForm").reset();
+            loadPastSubmissions(); // Refresh after save
+        })
+        .catch(() => {
+            document.getElementById("status").textContent = "❌ Error saving data!";
+        });
+    };
+    reader.readAsDataURL(file);
+});
+
+// Fetch past submissions
+function loadPastSubmissions() {
+    fetch(scriptURL)
+    .then(res => res.json())
+    .then(data => {
+        const container = document.getElementById("submissionsList");
+        container.innerHTML = "";
+        data.forEach(entry => {
+            const item = document.createElement("div");
+            item.style.display = "flex";
+            item.style.alignItems = "center";
+            item.style.gap = "5px";
+
+            const img = document.createElement("img");
+            img.src = entry.photo;
+            img.width = 30;
+            img.height = 30;
+            img.style.borderRadius = "50%";
+            img.style.objectFit = "cover";
+
+            const name = document.createElement("span");
+            name.textContent = entry.name;
+            name.style.fontSize = "12px";
+
+            item.appendChild(img);
+            item.appendChild(name);
+            container.appendChild(item);
+        });
+    })
+    .catch(err => console.error("Error loading past submissions:", err));
+}
+
+// Load on page start
+loadPastSubmissions();
+</script>
+</body>
+</html>
